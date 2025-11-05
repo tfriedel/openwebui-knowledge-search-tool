@@ -1,214 +1,105 @@
-# Open WebUI Tools
+# Open WebUI Knowledge Search Tool
 
-A collection of custom tools for [Open WebUI](https://github.com/open-webui/open-webui) that extend its functionality with intelligent, on-demand features.
+On-demand knowledge base search tool for [Open WebUI](https://github.com/open-webui/open-webui). The LLM intelligently decides when to access organizational knowledge instead of constantly injecting context into every message.
 
-## Tools
+## Features
 
-### 📚 Knowledge Search Tool
-
-Search organizational knowledge bases on-demand when the LLM determines it's needed, rather than constantly injecting context into every message.
-
-**Features:**
-- ✅ LLM intelligently decides when to access knowledge
-- ✅ Token efficient - only retrieves when necessary
-- ✅ Full citation support with inline [1], [2] references
-- ✅ Works with existing Open WebUI knowledge bases
-- ✅ No external dependencies or services required
-- ✅ Supports multiple knowledge bases
-- ✅ Direct database access (no API authentication issues)
-
-**Use Case:** You want the main assistant to handle general chat normally, but be able to reference stored knowledge or documentation when the user asks questions that require internal data.
-
-**[→ View Installation Guide](reddit_post.md)**
+- LLM decides when to access knowledge bases
+- Token efficient - only retrieves when necessary
+- Full citation support with inline [1], [2] references
+- Works with existing Open WebUI knowledge bases
+- No external dependencies required
+- Supports multiple knowledge bases
 
 ## Installation
 
-### Prerequisites
-
-- Open WebUI installed and running
-- One or more Knowledge Bases created in Open WebUI
-
-### Quick Start
-
-1. **Copy the tool code**
-   - Open `knowledge_search_tool.py`
-   - Copy the entire contents
-
-2. **Create the tool in Open WebUI**
-   - Navigate to **Workspace → Tools**
-   - Click **"Create Tool"**
-   - Paste the code
-   - Save
-
-3. **Configure the tool**
-   - Find your knowledge base IDs (see guide below)
-   - Set `default_knowledge_bases` in tool settings
-   - Adjust `top_k` and `relevance_threshold` if needed
-
-4. **Enable for your models**
-   - Go to **Workspace → Models**
-   - Edit your model
-   - Enable "Knowledge Search Tool" under Tools
-   - Save
+1. Copy the contents of `knowledge_search_tool.py`
+2. In Open WebUI, go to **Workspace → Tools** → **Create Tool**
+3. Paste the code and save
+4. Configure `default_knowledge_bases` with your knowledge base IDs (comma-separated)
+5. Go to **Workspace → Models** → Edit your model → Enable the tool
 
 ### Finding Knowledge Base IDs
 
-**Method 1: Via URL**
-1. Go to **Workspace → Knowledge**
-2. Click on a knowledge base
-3. The URL contains the ID: `http://localhost:8080/workspace/knowledge/[KNOWLEDGE_BASE_ID]`
+Go to **Workspace → Knowledge**, click on a knowledge base, and check the URL:
+```
+http://localhost:8080/workspace/knowledge/[KNOWLEDGE_BASE_ID]
+```
 
-**Method 2: Via the Tool**
-1. Enable the tool on a model
-2. Ask in chat: "List available knowledge bases"
-3. The tool will show all knowledge bases with their IDs
+Alternatively, enable the tool and ask: "List available knowledge bases"
 
-## Usage Examples
+## Usage
 
-### Example 1: Policy Question
+When users ask questions requiring organizational knowledge, the LLM automatically calls `search_knowledge()`:
+
 ```
 User: What's our password policy?
-LLM: [Calls search_knowledge("password policy")]
-LLM: According to the security documentation [1], passwords must be
-     at least 12 characters and include uppercase, lowercase, numbers,
-     and special characters [2].
+LLM: According to the security documentation [1], passwords must be at least
+     12 characters and include uppercase, lowercase, numbers, and special
+     characters [2].
 ```
 
-### Example 2: General Chat (No Knowledge Needed)
+For general questions, the tool is not invoked:
 ```
 User: What's 2+2?
-LLM: 4 (no knowledge search performed)
-```
-
-### Example 3: Technical Documentation
-```
-User: How do I deploy to production?
-LLM: [Calls search_knowledge("deployment procedures")]
-LLM: Based on the deployment guide [1], follow these steps:
-     1. Run tests locally [1]
-     2. Create a release branch [2]
-     3. Deploy to staging first [1]
-     ...
+LLM: 4
 ```
 
 ## Configuration
 
-### Tool Valves (Settings)
-
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `default_knowledge_bases` | Comma-separated knowledge base IDs | `""` (empty) |
+| `default_knowledge_bases` | Comma-separated knowledge base IDs | `""` |
 | `top_k` | Number of document chunks to retrieve | `5` |
 | `relevance_threshold` | Minimum similarity score (0.0-1.0) | `0.0` |
 
-**Example Configuration:**
-```
-default_knowledge_bases: "kb_policies,kb_technical,kb_hr"
-top_k: 5
-relevance_threshold: 0.0
-```
-
 ## How It Works
 
-1. **Tool Registration**: The LLM sees the tool as an available function
-2. **Intelligent Decision**: When the user asks a relevant question, the LLM decides to call `search_knowledge(query)`
-3. **Direct Retrieval**: The tool queries knowledge bases using Open WebUI's internal `query_collection()` function
-4. **Citation Formatting**: Results are formatted with XML `<source>` tags (same as native RAG)
-5. **LLM Response**: The LLM receives context and generates a response with inline citations [1], [2]
-6. **UI Display**: Citations appear in the source panel, just like native knowledge bases
+1. The LLM sees the tool as an available function
+2. When a question requires knowledge, the LLM calls `search_knowledge(query)`
+3. The tool queries knowledge bases using Open WebUI's internal `query_collection()`
+4. Results are formatted with XML `<source>` tags (same as native RAG)
+5. The LLM generates a response with inline citations [1], [2]
+6. Citations appear in the source panel
 
 ## Comparison: Tool vs. Native Knowledge
 
-| Feature | Native Knowledge Base | Knowledge Search Tool |
-|---------|----------------------|----------------------|
-| Retrieval Timing | Every message | Only when LLM decides |
-| Token Usage | High (always adds context) | Efficient (conditional) |
-| LLM Intelligence | No | Yes |
-| Citations | ✅ Yes | ✅ Yes |
-| Source Panel | ✅ Yes | ✅ Yes |
-| Multiple KB Search | One per model | Can search any combination |
-| General Chat | Cluttered with context | Clean |
+| Feature | Native Knowledge | This Tool |
+|---------|------------------|-----------|
+| Retrieval | Every message | Only when needed |
+| Token Usage | High | Efficient |
+| LLM Decision | No | Yes |
+| Citations | Yes | Yes |
+| Multiple KBs | One per model | Any combination |
 
 ## Troubleshooting
 
-### "Error: No knowledge bases specified"
-**Solution:** Configure `default_knowledge_bases` in tool settings with your knowledge base IDs, or have the LLM pass the `knowledge_base_ids` parameter.
+**"Error: No knowledge bases specified"**
+Configure `default_knowledge_bases` in tool settings or have the LLM pass the `knowledge_base_ids` parameter.
 
-### "No relevant information found"
-**Causes:**
-- Query didn't match knowledge base content
-- Knowledge base is empty or not properly configured
-- Relevance threshold too high
+**"No relevant information found"**
+The query didn't match knowledge base content. Try different search terms.
 
-**Solution:** Try different search terms or check knowledge base contents.
-
-### Tool not being called
-**Possible Issues:**
-- Tool not enabled for the model
-- LLM doesn't support function calling
-- Query not clearly requiring knowledge base access
-
-**Solution:**
+**Tool not being called**
 - Verify tool is enabled in model settings
+- Ensure your LLM supports function calling
 - Try explicit requests: "Search our documentation for..."
-- Use a modern LLM that supports function calling
-
-### 401 Unauthorized Error
-**Solution:** This has been fixed in the current version. The tool now uses direct database access instead of API calls, eliminating authentication issues.
 
 ## Technical Details
 
-### Architecture
-
 The tool uses Open WebUI's internal modules:
 - `open_webui.retrieval.utils.query_collection()` - Direct vector database querying
-- `open_webui.models.knowledge.Knowledges` - Knowledge base database access
-- `open_webui.models.users.Users` - User management
+- `open_webui.models.knowledge.Knowledges` - Knowledge base access
 - `app.state.EMBEDDING_FUNCTION()` - Same embedding function as native RAG
 
-### Why Not Pipelines or Filters?
-
-We evaluated three approaches:
-
-1. **Filter Functions** ❌
-   - Run on every message
-   - Would require keyword matching (too rigid)
-   - Can't leverage LLM intelligence
-
-2. **Pipelines with FunctionCallingBlueprint** ❌
-   - Requires separate service deployment
-   - Adds complexity and maintenance overhead
-   - Extra latency from separate service calls
-
-3. **Native Tools** ✅
-   - Runs inside Open WebUI
-   - LLM decides intelligently when to use
-   - No external dependencies
-   - Simple to install and maintain
-
-## Contributing
-
-Contributions are welcome! Feel free to:
-- Report issues
-- Suggest improvements
-- Submit pull requests
-- Share your use cases
+This approach is simpler than pipelines (no separate service) and more intelligent than filters (LLM decides vs keyword matching).
 
 ## License
 
-MIT License - feel free to use and modify as needed.
+MIT License
 
-## Related Resources
+## Resources
 
 - [Open WebUI Documentation](https://docs.openwebui.com/)
 - [Open WebUI GitHub](https://github.com/open-webui/open-webui)
-- [Open WebUI Tools Documentation](https://docs.openwebui.com/features/plugin/tools/)
-- [Reddit Discussion Post](reddit_post.md)
-
-## Acknowledgments
-
-This tool leverages Open WebUI's internal retrieval system and citation framework to provide seamless integration with existing knowledge bases.
-
----
-
-**Need help?** Open an issue or join the [Open WebUI Discord](https://discord.gg/5rJgQTnV4s)
+- [Tools Documentation](https://docs.openwebui.com/features/plugin/tools/)
