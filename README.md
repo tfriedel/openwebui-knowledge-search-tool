@@ -92,14 +92,6 @@ The tool uses Open WebUI's internal modules:
 - `open_webui.models.knowledge.Knowledges` - Knowledge base access
 - `app.state.EMBEDDING_FUNCTION()` - Same embedding function as native RAG
 
-This approach is simpler than pipelines (no separate service) and more intelligent than filters (LLM decides vs keyword matching).
-
 ## License
 
 MIT License
-
-## Resources
-
-- [Open WebUI Documentation](https://docs.openwebui.com/)
-- [Open WebUI GitHub](https://github.com/open-webui/open-webui)
-- [Tools Documentation](https://docs.openwebui.com/features/plugin/tools/)
